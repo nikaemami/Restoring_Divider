@@ -1,0 +1,21 @@
+module data_path(bus_in,selA,selB,selTRI,ldA,ldB,ldQ,shL,sel_out,init_counter,inc_counter,clk,rst,out,tri_in,zero_flag,overflow_flag,MSB,Co);
+	input[4:0]bus_in;
+	input selA,selB,selTRI,ldA,ldB,ldQ,shL,sel_out,init_counter,inc_counter,clk,rst;
+	output[4:0]out,tri_in;
+	output zero_flag,overflow_flag,MSB,Co;
+	wire zero_flag,overflow_flag;
+	wire [5:0]Q_out,result,A_in,A_out;
+	wire [4:0]B_out,B_in;
+	up_counter counter(clk,rst,init_counter,inc_counter,Co);
+	divide_zero check_zero(Q_out,zero_flag);
+	comparator check_overflow(A_out,Q_out,overflow_flag);
+	tri_state TRI(tri_in,selTRI,out);
+	register6 Q({0,bus_in},clk,rst,ldQ,Q_out);
+	mux2to1_6 M_A({0,bus_in},result,selA,A_in);
+	mux2to1_5 M_B(bus_in,{B_out[4:1],1'b1},selB,B_in);
+	shift_register5 B(B_in,0,clk,rst,ldB,shL,B_out);
+	shift_register6 A(A_in,B_out[4],clk,rst,ldA,shL,A_out);
+	add_sub ADD_SUB(A_out,Q_out,result);
+	mux2to1_5 M_out(A_out[4:0],B_out,sel_out,tri_in);
+	assign MSB = result[5];
+endmodule
